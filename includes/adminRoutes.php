@@ -64,18 +64,25 @@
 	        			<table width='100%'>
 							<tr>
 								<td colspan='5' style='text-align:center;'><b>Listado Rutas Rutery</b></td>
-							</tr>";
+							</tr>
+              <tr>
+                <td width='10%'><b>ID</b></td>
+                <td width='15%'><b>Nombre</b></td>
+                <td width='25%'><b>Descripción</b></td>
+                <td width='15%'><b>Estado</b></td>
+                <td width='35%'><b>Acciones</b></td>
+              </tr>";
 			// iterate Items
 			foreach ($result as $pos => $print) {
 			echo "
 	        	<tr>
 	        		<td width='100%' colspan='4'>	        		
 						<tr>
-							<td width='10%'>".$print->id."</td>
-							<td width='15%'>".$print->name."</td>
-							<td width='25%'>".$print->description."</td>
-							<td width='15%'>".(($print->status == 1)?'Activa':'Inactiva')."</td>
-							<td width='35%'>
+							<td>".$print->id."</td>
+							<td>".$print->name."</td>
+							<td>".$print->description."</td>
+							<td>".(($print->status == 1)?'Activa':'Inactiva')."</td>
+							<td>
 								<a href='admin.php?page=adminRoutesStations&rId=".$print->id."'>
 									<button type='button'>Agregar Parada</button>
 								</a>

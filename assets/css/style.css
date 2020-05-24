@@ -1,0 +1,21 @@
+.entry-content {
+	width: 100%;
+	height: auto;
+	min-height: 100px;
+}
+.map-container {
+    width:100%;
+    height:100%;
+}
+
+
+/**
+* Admin
+*/
+.table-header {
+	background-color: #727272;
+	color: #FFF !important;
+}
+.table-header b {
+	color: #FFF;
+}
