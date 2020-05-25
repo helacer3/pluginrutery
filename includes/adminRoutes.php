@@ -9,7 +9,7 @@
     $newState       = $_POST['newState'];
     unset($_POST);
     $wpdb->query("INSERT INTO $tableRoutes (name, description, status) VALUES('$newName','$newDescription','$newState')");
-    echo "<script>location.replace('".PLG_RUTA."');</script>";
+    echo "<script>location.reload();</script>";
   }
   // update
   if (isset($_POST['uptsubmit'])) {
@@ -18,14 +18,14 @@
     $uptDescription = $_POST['uptDescription'];
     $uptState       = $_POST['uptState'];
     $wpdb->query("UPDATE $tableRoutes SET name='$uptName',description='$uptDescription', status='$uptState' WHERE id = '$id'");
-    echo "<script>location.replace('".PLG_RUTA."');</script>";
+    echo "<script>location.reload();</script>";
   }
   // delete
   if (isset($_GET['del'])) {
     $id = $_GET['del'];
     $wpdb->query("DELETE FROM $tableRoutes WHERE id='$id'");
     $wpdb->query("DELETE FROM $tableRoutesStation WHERE id_routes='$id'");
-    echo "<script>location.replace('".PLG_RUTA."');</script>";
+    echo "<script>location.reload();</script>";
   }
   ?>
   <div class="wrap">
@@ -51,7 +51,9 @@
             	</select>
             </td>
             <td>
-            	<button id="newsubmit" name="newsubmit" type="submit">Crear Ruta</button>
+            	<button id="newsubmit" name="newsubmit" type="submit" class='button button-primary'>
+                Crear Ruta
+              </button>
             </td>
           </tr>
         </form>
@@ -63,7 +65,7 @@
 	        		<td width='100%' colspan='4'>
 	        			<table width='100%'>
 							<tr>
-								<td colspan='5' style='text-align:center;'><b>Listado Rutas Rutery</b></td>
+								<td colspan='5'  class='table-header'><b>Listado Rutas Rutery</b></td>
 							</tr>
               <tr>
                 <td width='10%'><b>ID</b></td>
@@ -84,13 +86,13 @@
 							<td>".(($print->status == 1)?'Activa':'Inactiva')."</td>
 							<td>
 								<a href='admin.php?page=adminRoutesStations&rId=".$print->id."'>
-									<button type='button'>Agregar Parada</button>
+									<button type='button'class='button button-primary'>Agregar Parada</button>
 								</a>
 								<a href='admin.php?page=adminRoutes&upt=".$print->id."'>
-									<button type='button'>Actualizar</button>
+									<button type='button'class='button button-primary'>Actualizar</button>
 								</a>
 								<a href='admin.php?page=adminRoutes&del=".$print->id."'>
-									<button type='button' onclick='confirm(\"¿Está seguro de eliminar la ruta seleccionada?\")'>Eliminar</button>
+									<button type='button' onclick='confirm(\"¿Está seguro de eliminar la ruta seleccionada?\")'class='button button-secundary'>Eliminar</button>
 								</a>
 							</td>
 						</tr>
@@ -114,6 +116,9 @@
         <table class='wp-list-table widefat striped'>
           <thead>
             <tr>
+              <td colspan='4' class='table-header'>Editar Ruta</td>
+            <tr/>
+            <tr>
               <th width='25%'>Nombre</th>
               <th width='25%'>Descripción</th>
               <th width='25%'>Estado</th>
@@ -135,8 +140,8 @@
             	</select>
                 </td>
                 <td width='25%'>
-                	<button id='uptsubmit' name='uptsubmit' type='submit'>Actualizar</button>
-                	<a href='admin.php?page=adminRoutes'><button type='button'>CANCEL</button></a>
+                	<button id='uptsubmit' name='uptsubmit' type='submit'class='button button-primary'>Actualizar</button>
+                	<a href='admin.php?page=adminRoutes'class='button button-secundary'><button type='button'>CANCEL</button></a>
             	</td>
               </tr>
             </form>

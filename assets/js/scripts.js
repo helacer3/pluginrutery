@@ -29,7 +29,7 @@
     //set the directions display panel
     //panel is usually just and empty div.  
     //This is where the turn by turn directions appear.
-    directionDisplay.setPanel(document.getElementById("googleMapRoutesAddressess")); 
+    //directionDisplay.setPanel(document.getElementById("googleMapRoutesAddressess")); 
 
     //build the waypoints
     //free api allows a max of 9 total stops including the start and end address
@@ -74,5 +74,66 @@
     });
   }
 
- 	$(document).ready(initMapDirections);
+  /**
+  * request Service
+  */
+  $('#solSubmit').on('click', function(e) {
+    // get Data
+    var solName  = $('#solName').val();
+    var solPhone = $('#solPhone').val();
+    // alert("nombre: "+solName+" celular: "+solPhone+" ruta: "+jsVars.ajaxUrl);
+    // validate Info
+    if (solName.length < 3) {
+      // show Message
+      $('#solErroMessage').html('Favor diligencie su nombre completo').show();
+      // hide Messsage
+      setTimeout( function () { $('#solErroMessage').html('').hide(); }, 4000);
+    } else if (solPhone.length < 10) {
+      // show Message
+      $('#solErroMessage').html('Favor verifique su número de celular').show();
+      // hide Messsage
+      setTimeout( function () { $('#solErroMessage').html('').hide(); }, 4000);
+    } else {
+      $.ajax({
+        url: jsVars.ajaxUrl,
+        type: "POST",
+        data: {
+          action:   'ajaxRequestService',
+          solRoute: jsVars.idRoute, // global Var
+          solName:  solName,
+          solPhone: solPhone
+        },
+        success: function(respuesta) {
+          // show Message
+          $('#solSuccessMessage').html('En pocos minutos nos pondremos en contacto. Muchas gracias!').show();
+        },
+        error: function() {
+          console.log("No se ha podido obtener la información");
+        }
+      });
+    }
+  });
+
+
+  /**
+  * request Service
+  */
+  $('#genRequest').on('click', function(e) {
+    $.ajax({
+      url: jsVars.ajaxUrl,
+      type: "POST",
+      data: {
+        action:   'ajaxRequestList',
+        solRoute: jsVars.idRoute, // global Vars
+      },
+      success: function(response) {
+        $('#drivers-reqlist-content').html(response);
+      },
+      error: function() {
+        console.log("No se ha podido obtener la información");
+      }
+    });
+  });
+
+ 	$(document).ready(/*initMapDirections*/);
 })(jQuery)

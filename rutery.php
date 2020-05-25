@@ -65,10 +65,37 @@ function crudStationsRoutesTables() {
 }
 
 /**
+ * Station Request
+*/
+function crudStationsRequestTables() {
+	global $wpdb;
+	$charset_collate = $wpdb->get_charset_collate();
+
+	/* table Routes Station */
+	$tableRoutesRequest = $wpdb->prefix . 'routes_request';
+	$sql = "CREATE TABLE  IF NOT EXISTS `$tableRoutesRequest` (
+	`id` int(11) NOT NULL AUTO_INCREMENT,
+	`id_routes` smallint(4) DEFAULT NULL,
+	`name` varchar(50) DEFAULT NULL,
+	`phone` varchar(20) DEFAULT NULL,
+	`request_date` datetime DEFAULT NOW(),
+	`status` boolean DEFAULT NULL,
+	PRIMARY KEY(id)
+	) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
+
+	// validate Table Exist
+	if ($wpdb->get_var("SHOW TABLES LIKE '$tableRoutesRequest'") != $tableRoutesRequest) {
+		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+		dbDelta($sql);
+	}
+}
+
+/**
 * register Activation Hooks
 */
 register_activation_hook( __FILE__, 'crudRoutesTables');
 register_activation_hook( __FILE__, 'crudStationsRoutesTables');
+register_activation_hook( __FILE__, 'crudStationsRequestTables');
 
 
 /**
@@ -84,21 +111,29 @@ function addAdminRoute() {
 /**
  * load Route
 */
-function loadSingleRoute($id) {
+function loadSingleRoute($namTable, $id) {
   	global $wpdb;
   	$objRoute = null;
   	if ($id > 0) {
-	  	$tableRoutes = $wpdb->prefix . 'routes';
-		$objRoute    =  $wpdb->get_row("SELECT * FROM $tableRoutes WHERE id = ".(int)$id);
+		$objRoute = $wpdb->get_row("SELECT * FROM $namTable WHERE id = ".(int)$id);
 	}
 	// default Return
 	return $objRoute;
 }
 
-// parece que no necesito el ajax
-//add_action("wp_ajax_singleRouteStations", "singleRouteStations");
-//add_action("wp_ajax_nopriv_singleRouteStations", "singleRouteStations");
-
+/*
+ * load Request List By Route
+*/
+function loadRequestListByRoute($id) {
+  	global $wpdb;
+  	$objRequest = null;
+  	$tableRoutesStation = $wpdb->prefix . 'routes_request';
+  	if ($id > 0) {
+		$objRequest = $wpdb->get_results("SELECT * FROM $tableRoutesStation WHERE id_routes = ".(int)$id);
+	}
+	// default Return
+	return $objRequest;
+}
 
 /**
 * singleRouteStations
@@ -158,10 +193,52 @@ function arraySingleRoutesStation($id) {
 }
 
 /**
+* ajax Request Service
+*/
+function ajaxRequestService() {
+	// global Connection
+	global $wpdb;
+	// set Table Name
+	$tableRoutesRequest = $wpdb->prefix . 'routes_request';
+	// request Post
+	$solName  = $_POST['solName'];
+	$solPhone = $_POST['solPhone'];
+	$solRoute = $_POST['solRoute'];
+	// create Request
+	$wpdb->query("INSERT INTO $tableRoutesRequest (id_routes, name, phone, request_date, status) 
+		VALUES (".(int)$solRoute.", '$solName', '$solPhone', NOW(), 1)");
+	// print Response
+	echo "OK";
+	// die
+	wp_die(); 
+}
+
+/**
+* ajax Request List
+*/
+function ajaxRequestList() {
+	// post Vars
+	$id = $_POST['solRoute'];
+	// load Request List
+	$lstRequest = loadRequestListByRoute($id);
+	// include View
+	include_once('includes/listRequest.php');
+	// die
+	wp_die(); 
+}
+
+// add Ajax Request
+add_action( 'wp_ajax_ajaxRequestService', 'ajaxRequestService' );
+add_action( 'wp_ajax_ajaxRequestList', 'ajaxRequestList' );
+
+/**
 * Crud Routes
 */
 function crudRoutesPage() {
-  include_once('includes/adminRoutes.php');
+	// CSS
+	wp_enqueue_style( 'cssRutery', plugin_dir_url( __FILE__ ) . 'assets/css/style.css');
+	// include View
+	include_once('includes/adminRoutes.php');
 }
 
 /**
@@ -180,8 +257,6 @@ function crudRoutesStationPage() {
 function showRouteMap() {
   include_once('includes/showRouteMap.php');
 }
-
-
 
 // load Scrips JS
 // add_action( 'wp_enqueue_scripts', 'scriptsMaps' );
@@ -206,8 +281,9 @@ function scriptsMaps($id) {
 	wp_enqueue_script( 'scriptRoute', plugin_dir_url( __FILE__ ) . 'assets/js/scripts.js', array( 'jquery' ) );
 	
 	wp_localize_script('scriptRoute','jsVars', array(
+			'idRoute'    => $id,
 			'plgRuta'    => plugin_dir_url( __FILE__ ),
-			'ajaxurl'    => admin_url('admin-ajax.php'),
+			'ajaxUrl'    => admin_url('admin-ajax.php'),
 			'jsonRoutes' => arraySingleRoutesStation($id)
 		)
 	);

@@ -7,7 +7,46 @@
     width:100%;
     height:100%;
 }
+/**
+* Form
+*/
+.inputRequest {
+	text-align: center;
+	padding-top: 11px;
+}
 
+.msg_error,
+.msg_success {
+	padding-top: 8px;
+	text-align: center;
+	width: 100%;
+	height: 50px;
+	color: #FFF;
+	display: none;
+
+}
+
+.msg_error {
+	background-color: #cd2653;
+}
+.msg_success {
+	background-color: #fe0000;
+}
+
+/**
+* list Request
+*/
+.table-request {
+}
+.table-request .table-request-label {
+	text-align: center;
+	font-weight: bold;
+	color: #FFF;
+	background-color: #fe0000;
+}
+.table-request .table-request-content {
+	text-align: center;
+}
 
 /**
 * Admin
@@ -15,6 +54,7 @@
 .table-header {
 	background-color: #727272;
 	color: #FFF !important;
+	text-align: left;
 }
 .table-header b {
 	color: #FFF;

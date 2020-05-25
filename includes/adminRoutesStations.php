@@ -1,7 +1,11 @@
 <?php
+	// global Wordpress
 	global $wpdb;
-	$actRoute           = loadSingleRoute($_REQUEST['rId']);
+	// table Names
+	$tableRoutes        = $wpdb->prefix . 'routes';
 	$tableRoutesStation = $wpdb->prefix . 'routes_station';
+	// load Single Route
+	$actRoute           = loadSingleRoute($tableRoutes, $_REQUEST['rId']);
 	// actual Route Stations
     $actRouStations     = $wpdb->get_results("SELECT * FROM {$tableRoutesStation} where id_routes = ".
       	(int)$_REQUEST['rId']." order by id DESC");
@@ -9,19 +13,16 @@
 	if ($actRoute != null) {
 		// create
 		if (isset($_POST['newsubmit'])) { 
-			$newIdRoute     = $_POST['rId'];
-			$newName        = $_POST['newName'];
-			$newPosition    = $_POST['newPosition'];
-			$newAddress     = $_POST['newAddress'];
-			$newState       = $_POST['newState'];
+			$newIdRoute  = $_POST['rId'];
+			$newName     = $_POST['newName'];
+			$newPosition = $_POST['newPosition'];
+			$newAddress  = $_POST['newAddress'];
+			$newState    = $_POST['newState'];
 			unset($_POST);
 
-			echo "INSERT INTO $tableRoutesStation (id_routes, name, address, position, status) 
-				VALUES('$newIdRoute','$newName','$newAddress',(int)$newPosition,'$newState')";
-
 			$wpdb->query("INSERT INTO $tableRoutesStation (id_routes, name, address, position, status) 
-				VALUES('$newIdRoute','$newName','$newAddress',(int)$newPosition,'$newState')");
-			echo "<script>location.replace('".PLG_RUTA."');</script>";
+				VALUES('$newIdRoute','$newName','$newAddress',".(int)$newPosition.", $newState)");
+			echo "<script>location.replace('admin.php?page=adminRoutesStations&rId=".$_REQUEST['rId']."');</script>";
 		}
 		// update
 		if (isset($_POST['uptsubmit'])) {
@@ -31,13 +32,13 @@
 			$uptPosition = $_POST['uptPosition'];
 			$uptState    = $_POST['uptState'];
 			$wpdb->query("UPDATE $tableRoutesStation SET name='$uptName', address='$uptAddress', position= ".(int)$uptPosition.", status='$uptState' WHERE id = '$id'");
-			echo "<script>location.replace('".PLG_RUTA."');</script>";
+			echo "<script>location.replace('admin.php?page=adminRoutesStations&rId=".$_REQUEST['rId']."');</script>";
 		}
 		// delete
 		if (isset($_GET['del'])) {
 			$id = $_GET['del'];
 			$wpdb->query("DELETE FROM $tableRoutesStation WHERE id='$id'");
-			echo "<script>location.replace('".PLG_RUTA."');</script>";
+			echo "<script>location.replace('admin.php?page=adminRoutesStations&rId=".$_REQUEST['rId']."');</script>";
 		}
     ?>
 	  <div class="wrap">
@@ -78,7 +79,9 @@
 	            	</select>
 	            </td>
 	            <td>
-	            	<button id="newsubmit" name="newsubmit" type="submit">Crear Estación Ruta</button>
+	            	<button id="newsubmit" name="newsubmit" type="submit" class='button button-primary'>
+	            		Crear Estación Ruta
+	            	</button>
 	            </td>
 	          </tr>
 	        </form>
@@ -95,12 +98,14 @@
 								<td width='10%'><b>ID</b></td>
 								<td width='20%'><b>Nombre</b></td>
 								<td width='25%'><b>Dirección</b></td>
-								<td width='10%'><b>Posición</b></td>
+								<td width='10%'><b>Después de</b></td>
 								<td width='10%'><b>Estado</b></td>
 								<td width='25%'><b>Acciones</b></td>
 							</tr>";
 			// iterate Items
 	        foreach ($actRouStations as $print) {
+	        	// before Route
+	        	$befRoute = loadSingleRoute($tableRoutesStation, $print->position);
 	            echo "
 	        	<tr>
 	        		<td width='100%' colspan='4'>
@@ -108,14 +113,14 @@
 							<td>".$print->id."</td>
 							<td>".$print->name."</td>
 							<td>".$print->address."</td>
-							<td>".(int)$print->position."</td>
+							<td>".(($befRoute != null) ? $befRoute->name: 'Estación inicial')."</td>
 							<td>".(($print->status == 1)?'Activa':'Inactiva')."</td>
 							<td>
 								<a href='admin.php?page=adminRoutesStations&rId=".(int)$_REQUEST['rId']."&upt=".$print->id."'>
-									<button type='button'>Actualizar</button>
+									<button type='button'class='button button-primary'>Actualizar</button>
 								</a>
 								<a href='admin.php?page=adminRoutesStations&rId=".(int)$_REQUEST['rId']."&del=".$print->id."'>
-									<button type='button' onclick='confirm(\"¿Está seguro de eliminar la estación seleccionada?\")'>Eliminar</button>
+									<button type='button' onclick='confirm(\"¿Está seguro de eliminar la estación seleccionada?\")' class='button button-secundary'>Eliminar</button>
 								</a>
 							</td>
 						</tr>
@@ -144,7 +149,7 @@
 	            <tr>
 	              <th width='25%'>Nombre</th>
 	              <th width='30%'>Dirección</th>
-	              <th width='10%'>Posición</th>
+	              <th width='10%'>Después de</th>
 	              <th width='10%'>Estado</th>
 	              <th width='25%'>Acciones</th>
 	            </tr>
@@ -159,11 +164,12 @@
 	                </td>
 	                <td><input type='text' id='uptAddress' name='uptAddress' value='$item->address'></td>                
 	                <td>
-						<select name='newPosition' id='newPosition'>
+						<select name='uptPosition' id='uptPosition'>
 	            		<option value='0'>Es la dirección Origen</option>";
 	            		foreach ($actRouStations as $station) {
-	            			if ($station->id != $upt_id) {
-	            				echo "<option value='{$station->id}'>{$station->name}</option>";
+	            			// dont show Actual Station
+	            			if ($station->id != $item->id) {
+	            				echo "<option value='{$station->id}' ".(($station->id == $item->position) ? 'selected': '').">{$station->name}</option>";
             				}
             			}
 		            	echo "</select>
@@ -175,8 +181,8 @@
 	            	</select>
 	                </td>
 	                <td>
-	                	<button id='uptsubmit' name='uptsubmit' type='submit'>Actualizar</button>
-	                	<a href='admin.php?page=adminRoutes'><button type='button'>CANCEL</button></a>
+	                	<button id='uptsubmit' name='uptsubmit' type='submit' class='button button-primary'>Actualizar</button>
+	                	<a href='admin.php?page=adminRoutes'><button type='button' class='button button-secundary'>CANCEL</button></a>
 	            	</td>
 	              </tr>
 	            </form>
