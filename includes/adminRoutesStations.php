@@ -7,8 +7,8 @@
 	// load Single Route
 	$actRoute           = loadSingleRoute($tableRoutes, $_REQUEST['rId']);
 	// actual Route Stations
-    $actRouStations     = $wpdb->get_results("SELECT * FROM {$tableRoutesStation} where id_routes = ".
-      	(int)$_REQUEST['rId']." order by id DESC");
+    $actRouStations     = $wpdb->get_results("SELECT * FROM {$tableRoutesStation} 
+    	where id_routes = ".(int)$_REQUEST['rId']." order by id DESC");
 	// validate Route Exist
 	if ($actRoute != null) {
 		// create
@@ -116,7 +116,7 @@
 							<td>".(($befRoute != null) ? $befRoute->name: 'Estación inicial')."</td>
 							<td>".(($print->status == 1)?'Activa':'Inactiva')."</td>
 							<td>
-								<a href='admin.php?page=adminRoutesStations&rId=".(int)$_REQUEST['rId']."&upt=".$print->id."'>
+								<a href='admin.php?page=adminRoutesStations&rId=".(int)$_REQUEST['rId']."&upt=".$print->id."#tbl-update'>
 									<button type='button'class='button button-primary'>Actualizar</button>
 								</a>
 								<a href='admin.php?page=adminRoutesStations&rId=".(int)$_REQUEST['rId']."&del=".$print->id."'>
@@ -141,7 +141,7 @@
 	        $upt_id = $_GET['upt'];
 	        $item   = $wpdb->get_row("SELECT * FROM $tableRoutesStation WHERE id=".(int)$upt_id);
 	        echo "
-	        <table class='wp-list-table widefat striped'>
+	        <table id='tbl-update' class='wp-list-table widefat striped'>
 	          <thead>
 	          	<tr>
 	          		<td colspan='5' class='table-header'>Editar Estación</td>

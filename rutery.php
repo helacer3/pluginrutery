@@ -13,90 +13,14 @@ defined('ABSPATH') or die("Bye bye");
 define('MAPS_API', "AIzaSyAM6JHTir9agfylPbPeMeOpXl4xq_SdD3Q");
 define('PLG_RUTA', plugin_dir_path(__FILE__));
 
-/**
- * crud Routes
-*/
-function crudRoutesTables() {
-	global $wpdb;
-	$charset_collate = $wpdb->get_charset_collate();
+// include Entities Class
+require_once('class/Entities.php');
+// include User Class
+require_once('class/Users.php');
+// include User Class
+require_once('class/Routes.php');
 
-	/* table Routes */
-	$tableRoutes = $wpdb->prefix . 'routes';
-	$sql = "CREATE TABLE IF NOT EXISTS `$tableRoutes` (
-	`id` int(11) NOT NULL AUTO_INCREMENT,
-	`name` varchar(220) DEFAULT NULL,
-	`description` text DEFAULT NULL,
-	`status` boolean DEFAULT NULL,
-	PRIMARY KEY(id)
-	) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
-
-	// validate Table Exist
-	if ($wpdb->get_var("SHOW TABLES LIKE '$tableRoutes'") != $tableRoutes) {
-		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-		dbDelta($sql);
-	}
-}
-
-/**
- * crud Station Routes
-*/
-function crudStationsRoutesTables() {
-	global $wpdb;
-	$charset_collate = $wpdb->get_charset_collate();
-
-	/* table Routes Station */
-	$tableRoutesStation = $wpdb->prefix . 'routes_station';
-	$sql = "CREATE TABLE  IF NOT EXISTS `$tableRoutesStation` (
-	`id` int(11) NOT NULL AUTO_INCREMENT,
-	`id_routes` smallint(4) DEFAULT NULL,
-	`name` varchar(220) DEFAULT NULL,
-	`address` varchar(250) DEFAULT NULL,
-	`latitude` varchar(250) DEFAULT NULL,
-	`longitude` varchar(250) DEFAULT NULL,
-	`status` boolean DEFAULT NULL,
-	PRIMARY KEY(id)
-	) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
-
-	// validate Table Exist
-	if ($wpdb->get_var("SHOW TABLES LIKE '$tableRoutesStation'") != $tableRoutesStation) {
-		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-		dbDelta($sql);
-	}
-}
-
-/**
- * Station Request
-*/
-function crudStationsRequestTables() {
-	global $wpdb;
-	$charset_collate = $wpdb->get_charset_collate();
-
-	/* table Routes Station */
-	$tableRoutesRequest = $wpdb->prefix . 'routes_request';
-	$sql = "CREATE TABLE  IF NOT EXISTS `$tableRoutesRequest` (
-	`id` int(11) NOT NULL AUTO_INCREMENT,
-	`id_routes` smallint(4) DEFAULT NULL,
-	`name` varchar(50) DEFAULT NULL,
-	`phone` varchar(20) DEFAULT NULL,
-	`request_date` datetime DEFAULT NOW(),
-	`status` boolean DEFAULT NULL,
-	PRIMARY KEY(id)
-	) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
-
-	// validate Table Exist
-	if ($wpdb->get_var("SHOW TABLES LIKE '$tableRoutesRequest'") != $tableRoutesRequest) {
-		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-		dbDelta($sql);
-	}
-}
-
-/**
-* register Activation Hooks
-*/
-register_activation_hook( __FILE__, 'crudRoutesTables');
-register_activation_hook( __FILE__, 'crudStationsRoutesTables');
-register_activation_hook( __FILE__, 'crudStationsRequestTables');
-
+// registerDriversPositionsByRoute(1, 1, "12", "13");
 
 /**
 Add Menu Itemd
@@ -105,91 +29,6 @@ add_action('admin_menu', 'addAdminRoute');
 function addAdminRoute() {
   add_menu_page('RUTERY', 'Rutas', 'manage_options' , 'adminRoutes', 'crudRoutesPage', 'dashicons-location');
   add_submenu_page('adminRoutes', "Paradas", "Paradas", 'manage_options', 'adminRoutesStations', 'crudRoutesStationPage', 2); 
-}
-
-
-/**
- * load Route
-*/
-function loadSingleRoute($namTable, $id) {
-  	global $wpdb;
-  	$objRoute = null;
-  	if ($id > 0) {
-		$objRoute = $wpdb->get_row("SELECT * FROM $namTable WHERE id = ".(int)$id);
-	}
-	// default Return
-	return $objRoute;
-}
-
-/*
- * load Request List By Route
-*/
-function loadRequestListByRoute($id) {
-  	global $wpdb;
-  	$objRequest = null;
-  	$tableRoutesStation = $wpdb->prefix . 'routes_request';
-  	if ($id > 0) {
-		$objRequest = $wpdb->get_results("SELECT * FROM $tableRoutesStation WHERE id_routes = ".(int)$id);
-	}
-	// default Return
-	return $objRequest;
-}
-
-/**
-* singleRouteStations
-*/
-function singleRouteStations($id = 0) {
-	global $wpdb; // this is how you get access to the database
-	$arrStations = array();
-  	if ($id > 0) {
-	  	$tableRoutesStation = $wpdb->prefix . 'routes_station';
-		$objStations        = $wpdb->get_results("SELECT * FROM $tableRoutesStation 
-			WHERE id_routes = ".(int)$id." AND status = 1 order by position ASC");
-		// valdiate Object
-		if (count($objStations) > 0) {
-			// iterate Object
-			foreach ($objStations as $station) {
-				array_push($arrStations,
-					array(
-						//'lat'  => (float)$station->latitude,
-						//'lng'  => (float)$station->longitude,
-						'name'    => $station->name,
-						'address' => $station->address,
-					)
-				);
-			}
-		}
-	}
-	//print_r($arrStations);die;
-	// json Response	
-	return $arrStations;
-}
-
-/**
-* arraySingleRoutesStation
-*/
-function arraySingleRoutesStation($id) {
-	// get Array Routes
-	$arrRoutes = singleRouteStations($id);
-	// count Items
-	$numItems  = count($arrRoutes);
-	// default Return
-	return array (
-		'origin'       => ($numItems > 0) ? $arrRoutes[0]: '',
-		'intermediate' => call_user_func(function() use ($arrRoutes, $numItems) {
-			$arrIntermediate = array();
-			// validate Other Addresses
-			if ($numItems > 2) {
-				unset($arrRoutes[0]);
-				unset($arrRoutes[$numItems-1]);
-				// set Array Value
-				$arrIntermediate = $arrRoutes;
-			}
-			// default Return
-			return $arrIntermediate;
-		}),
-		'destination'  => ($numItems > 1) ? $arrRoutes[$numItems-1]: ''
-	);
 }
 
 /**
@@ -205,13 +44,30 @@ function ajaxRequestService() {
 	$solPhone = $_POST['solPhone'];
 	$solRoute = $_POST['solRoute'];
 	// create Request
-	$wpdb->query("INSERT INTO $tableRoutesRequest (id_routes, name, phone, request_date, status) 
-		VALUES (".(int)$solRoute.", '$solName', '$solPhone', NOW(), 1)");
+	$wpdb->query("INSERT INTO $tableRoutesRequest (id_routes, name, phone, request_date, contacted, status) 
+		VALUES (".(int)$solRoute.", '$solName', '$solPhone', NOW(), 0, 1)");
 	// print Response
 	echo "OK";
 	// die
 	wp_die(); 
 }
+
+
+function ajaxRequestContacted () {
+	// global Connection
+	global $wpdb;
+	// set Table Name
+	$tableRoutesRequest = $wpdb->prefix . 'routes_request';
+	// request Post
+	$idRequest  = $_POST['idRequest'];
+	// create Request
+	$wpdb->query("UPDATE $tableRoutesRequest SET contacted = 1 where id = ".(int)$idRequest);
+	// print Response
+	echo "OK";
+	// die
+	wp_die(); 
+} 
+
 
 /**
 * ajax Request List
@@ -227,9 +83,44 @@ function ajaxRequestList() {
 	wp_die(); 
 }
 
-// add Ajax Request
+/**
+* ajax Register Driver Position 
+*/
+function ajaxRegisterDriverPosition() {
+	// post Vars
+	$idUser       = $_POST['actUser'];
+	$idRoutes     = $_POST['actRoute'];
+	$strLatitude  = $_POST['actLatitude'];
+	$strLongitude = $_POST['actLongitude'];
+	// register Drivers Positions By Route
+	registerDriversPositionsByRoute($idUser, $idRoutes, $strLatitude, $strLongitude);
+}
+
+/**
+* ajax Find Drivers Positions
+*/
+function ajaxFindDriversPositions() {
+	// post Vars
+	$idRoutes = $_POST['actRoute'];
+	// register Drivers Positions By Route
+	echo loadPositionsByRoute($idRoutes);
+	// die
+	wp_die(); 
+}
+
+// add Ajax Request Private
 add_action( 'wp_ajax_ajaxRequestService', 'ajaxRequestService' );
+add_action( 'wp_ajax_ajaxRequestContacted', 'ajaxRequestContacted' );
 add_action( 'wp_ajax_ajaxRequestList', 'ajaxRequestList' );
+add_action( 'wp_ajax_ajaxRegisterDriverPosition', 'ajaxRegisterDriverPosition' );
+add_action( 'wp_ajax_ajaxFindDriversPositions', 'ajaxFindDriversPositions' );
+
+// add Ajax Request No Private
+add_action( 'wp_ajax_nopriv_ajaxRequestService', 'ajaxRequestService' );
+add_action( 'wp_ajax_nopriv_ajaxRequestContacted', 'ajaxRequestContacted' );
+add_action( 'wp_ajax_nopriv_ajaxRequestList', 'ajaxRequestList' );
+add_action( 'wp_ajax_nopriv_ajaxRegisterDriverPosition', 'ajaxRegisterDriverPosition' );
+add_action( 'wp_ajax_nopriv_ajaxFindDriversPositions', 'ajaxFindDriversPositions' );
 
 /**
 * Crud Routes
@@ -255,7 +146,14 @@ function crudRoutesStationPage() {
 * Show Route Map
 */
 function showRouteMap() {
-  include_once('includes/showRouteMap.php');
+  include_once('includes/pages/showRouteMap.php');
+}
+
+/**
+* Show User Routes
+*/
+function showUserRoutes() {
+  include_once('includes/pages/showUserRoutes.php');
 }
 
 // load Scrips JS
@@ -274,6 +172,17 @@ add_shortcode( 'routesMapShortCode', function ($atts, $content, $tag) {
 	return ob_get_clean();
 });
 
+// add Front User Routes
+add_shortcode( 'userRoutesShortCode', function ($atts, $content, $tag) {
+	// load Routes
+	ob_start();
+	showUserRoutes($id);
+	return ob_get_clean();
+});
+
+/**
+* scripts Maps
+*/
 function scriptsMaps($id) {
 	// CSS
 	wp_enqueue_style( 'cssRutery', plugin_dir_url( __FILE__ ) . 'assets/css/style.css');
@@ -282,6 +191,8 @@ function scriptsMaps($id) {
 	
 	wp_localize_script('scriptRoute','jsVars', array(
 			'idRoute'    => $id,
+			'idUser'     => get_current_user_id(),
+			'isDriver'   => validateUserRole('conductor'),
 			'plgRuta'    => plugin_dir_url( __FILE__ ),
 			'ajaxUrl'    => admin_url('admin-ajax.php'),
 			'jsonRoutes' => arraySingleRoutesStation($id)

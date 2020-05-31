@@ -1,23 +1,73 @@
 (function($) {
-	
+	// vars
+  var globalMap     = null;
+  var markerDrivers = [];
+
+  /**
+  * general Init
+  */
+  function generalInit() {
+    // register Position Automatized
+    if (jsVars.isDriver == true) {
+      console.log("El usuario actual, es un conductor");
+      // register Position
+      autRegister = setInterval(function () { getLocation(); }, 30000);
+    } else {
+      console.log("El usuario actual, no es un conductor");
+      // load Drivers Position
+      shwDrivers  = setInterval(function () { findDriversPositions(); }, 30000);
+    }
+    // init Map Directions
+    initMapDirections();
+  }
+
+  /**
+  * calculate Center
+  */
   function calculateCenter(objAddress) {
     var bounds = new google.maps.LatLngBounds();
+    // iterate Adressess
     for (var i = 0; i < objAddress.length; i++) {
       bounds.extend(coordinates[i]);
     }
     return bounds.getCenter();
   }
 
+  /**
+  * add Marker Map
+  */
+  function addMarkerMap(cooLatitude, cooLongitude, cooTitle) {
+    console.log(cooLatitude+" - "+cooLongitude+" - "+cooTitle);
+    // coordinates
+    var myLatLng  = { lat: parseFloat(cooLatitude), lng: parseFloat(cooLongitude) };
+
+    var image     = jsVars.plgRuta+'assets/images/markers/busstop.png';
+    // config Marker
+    markerDrivers.push(
+      new google.maps.Marker({
+        position:  myLatLng,
+        map:       globalMap,
+        icon:      image,
+        //animation: google.maps.Animation.DROP,
+        title:     cooTitle
+      })
+    );
+    // set Map
+    //marker.setMap(globalMap);
+  }
+
+  /**
+  * init Map Directions
+  */
   function initMapDirections() {
     // Configuración del mapa
     var mapProp = {
-      zoom: 12,
+      zoom: 13,
       //center: {lat: 4.736519, lng: -74.049400},
       mapTypeId: google.maps.MapTypeId.terrain
     };
     // Agregando el mapa al tag de id googleMap
-    var map = new google.maps.Map(document.getElementById("googleMapRoutes"), mapProp);
-
+    globalMap = new google.maps.Map(document.getElementById("googleMapRoutes"), mapProp);
 
     var directionsService = new google.maps.DirectionsService();
 
@@ -25,7 +75,7 @@
     var directionDisplay = new google.maps.DirectionsRenderer(renderOptions);
 
     //set the directions display service to the map
-    directionDisplay.setMap(map);
+    directionDisplay.setMap(globalMap);
     //set the directions display panel
     //panel is usually just and empty div.  
     //This is where the turn by turn directions appear.
@@ -66,8 +116,8 @@
             directionDisplay.setDirections(response);
 
             var bounds = response.routes[0].bounds;
-            map.fitBounds(bounds);
-            map.setCenter(bounds.getCenter());
+            globalMap.fitBounds(bounds);
+            globalMap.setCenter(bounds.getCenter());
         }
         else {
         }
@@ -135,5 +185,113 @@
     });
   });
 
- 	$(document).ready(/*initMapDirections*/);
+
+  /**
+  * request Service
+  */
+  $(document).on('click', '.reqContacted', function(e) {
+    // contacted Confirmation
+    if (confirm('Confirma que ya contactó al usuario?')) {
+      // get Request ID
+      var idRequest = $(this).attr('data-reqid');
+      // request Ajax
+      $.ajax({
+        url: jsVars.ajaxUrl,
+        type: "POST",
+        data: {
+          idRequest: idRequest,
+          action:    'ajaxRequestContacted',
+          solRoute:  jsVars.idRoute, // global Vars
+        },
+        success: function(response) {
+          $('#genRequest').trigger('click');
+        },
+        error: function() {
+          console.log("No se ha podido obtener la información");
+        }
+      });
+    }
+  });
+
+  /**
+  * driver Route Finish
+  */
+  $(document).on('click', '#routeFinish', function(e) {
+    clearInterval(autRegister);
+  });
+
+  /**
+  * register Driver Position
+  */
+  function registerDriverPosition(actCoordinates) {
+    // request Ajax
+    $.ajax({
+      url: jsVars.ajaxUrl,
+      type: "POST",
+      data: {
+        action:       'ajaxRegisterDriverPosition',
+        actRoute:     jsVars.idRoute, // global Vars
+        actUser:      jsVars.idUser,
+        actLatitude:  actCoordinates.coords.latitude,
+        actLongitude: actCoordinates.coords.longitude
+      },
+      success: function(response) {
+      },
+      error: function() {
+        console.log("No se ha podido obtener la información");
+      }
+    });
+  }
+
+  /**
+  * find Drivers Positions
+  */
+  function findDriversPositions() {
+    // request Ajax
+    $.ajax({
+      url: jsVars.ajaxUrl,
+      type: "POST",
+      dataType:'json',
+      data: {
+        action:   'ajaxFindDriversPositions',
+        actRoute: jsVars.idRoute // global Vars
+      },
+      success: function(response) {
+        // validate Response
+        if (response.status == "OK") {
+
+          if ( markerDrivers.length > 0) {
+            for (var i = 0; i < markerDrivers.length; i++) {
+              console.log("Ingresa a eliminar el marcador");
+              markerDrivers[i].setMap(null);
+            }
+            markerDrivers = [];
+          }
+
+          // iterate Data
+          $.each(response.data, function(index, item) {
+            //console.log(item);
+            addMarkerMap(item.latitude, item.longitude, item.display_name);
+          });
+        }
+      },
+      error: function() {
+        console.log("No se ha podido obtener la información");
+      }
+    });
+  }
+
+  /**
+  * get Location
+  */
+  function getLocation() {
+    if (navigator.geolocation) {
+      console.log("Ingresa a Registrar la ubicación");
+      navigator.geolocation.getCurrentPosition(registerDriverPosition);
+    } else {
+      console.log("Geolocation is not supported by this browser.");
+    }
+  }
+
+ 	$(document).ready(generalInit);
 })(jQuery)
