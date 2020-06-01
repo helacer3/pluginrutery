@@ -19,6 +19,8 @@ require_once('class/Entities.php');
 require_once('class/Users.php');
 // include User Class
 require_once('class/Routes.php');
+// include Products Class
+require_once('class/Products.php');
 
 // registerDriversPositionsByRoute(1, 1, "12", "13");
 
@@ -176,7 +178,7 @@ add_shortcode( 'routesMapShortCode', function ($atts, $content, $tag) {
 add_shortcode( 'userRoutesShortCode', function ($atts, $content, $tag) {
 	// load Routes
 	ob_start();
-	showUserRoutes($id);
+	showUserRoutes();
 	return ob_get_clean();
 });
 

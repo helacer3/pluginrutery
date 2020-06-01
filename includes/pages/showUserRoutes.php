@@ -1,20 +1,20 @@
 <div class="container">
 	<div class="row">
 		<?php
-		// get User Purshased Products
-		$lstProducts = getUserPurshasedProducts();
+		// get User Products
+		$lstProducts = getUserProducts();
 		// validate List
 		if (count($lstProducts) > 0) {
-			foreach ($lstProducts as $Product) {
+			foreach ($lstProducts as $product) {
 		?>
 		<!-- show Product -->
-		<a href="">
+		<a href="<?php echo $product->guid; ?>">
 			<div class="col-4">
 				<div class="prd-image">
-					<img src="" align="">
+					<img src="<?php echo $product->post_title; ?>" alt="<?php echo $product->post_title; ?>">
 				</div>
 				<div class="prd-name">
-					Nombre Producto
+					<?php echo $product->post_title; ?>
 				</div>
 			</div>
 		</a>
