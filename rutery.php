@@ -176,6 +176,8 @@ add_shortcode( 'routesMapShortCode', function ($atts, $content, $tag) {
 
 // add Front User Routes
 add_shortcode( 'userRoutesShortCode', function ($atts, $content, $tag) {
+	// CSS
+	wp_enqueue_style( 'cssRutery', plugin_dir_url( __FILE__ ) . 'assets/css/style.css');
 	// load Routes
 	ob_start();
 	showUserRoutes();

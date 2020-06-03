@@ -1,29 +1,35 @@
-<div class="container">
-	<div class="row">
+<div class="container container-products">
+	<div class="row row-products">
 		<?php
-		// get User Products
-		$lstProducts = getUserProducts();
-		// validate List
-		if (count($lstProducts) > 0) {
-			foreach ($lstProducts as $product) {
+			// get User Orders
+			$orders = getUserOrders();
+			// validate Orders
+			if (count($orders) > 0) {
+				// iterate Orders
+				foreach ($orders as $order) {
+					// iterate Order Items
+					foreach ($order->get_items() as $item) {
+						// load Actual Product
+						//$actProduct = wc_get_product($item->get_product_id());
 		?>
-		<!-- show Product -->
-		<a href="<?php echo $product->guid; ?>">
-			<div class="col-4">
-				<div class="prd-image">
-					<img src="<?php echo $product->post_title; ?>" alt="<?php echo $product->post_title; ?>">
+			<!-- show Product -->
+			<a href="<?php echo get_permalink($item->get_product_id()); ?>">
+				<div class="col-4 col-singleproduct">
+					<div class="prd-image">
+						<?php echo get_the_post_thumbnail($item->get_product_id(), 'posts'); ?>
+					</div>
+					<div class="prd-name">
+						<?php echo $item->get_name(); ?>
+					</div>
 				</div>
-				<div class="prd-name">
-					<?php echo $product->post_title; ?>
-				</div>
-			</div>
-		</a>
-		<!-- end Product -->
+			</a>
+			<!-- end Product -->
 		<?php
+				}
 			}
 		} else {
 		?>
-		<div class="col-12">
+		<div class="col-12 col-noproducts">
 			No tiene productos vigentes
 		</div>
 		<?php } ?>			

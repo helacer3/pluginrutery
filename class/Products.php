@@ -7,7 +7,7 @@ function getUserPurshasedProducts() {
  	// global Wpdb
 	global $wpdb;
 	// create Query
-	$query = "SELECT woim.meta_value
+	echo $query = "SELECT woim.meta_value
 		FROM wld_posts AS p
 		INNER JOIN wld_postmeta AS pm ON p.ID = pm.post_id
 		INNER JOIN wld_woocommerce_order_items AS woi ON p.ID = woi.order_id
@@ -60,4 +60,29 @@ function getUserProducts() {
 	// echo "<pre>"; print_r($arrProducts);	echo "<pre>";die;
 	// default Return
 	return $arrProducts;
+}
+
+/**
+* get User Orders
+*/
+function getUserOrders() {
+	// default Var
+	$orders = array();
+	// get Current User
+	global $current_user;
+	// get User Email
+	$email = (string)$current_user->user_email;
+	// validate Email
+	if ($email != "") {
+		// query Orders
+		$query = new WC_Order_Query();
+		// set Email
+		$query->set('customer', $email);
+		// set Status
+		$query->set('status', ['processing','completed']);
+		// get Orders
+		$orders = $query->get_orders();
+	}
+	// default Return
+	return $orders;
 }

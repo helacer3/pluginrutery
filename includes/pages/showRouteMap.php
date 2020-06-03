@@ -12,7 +12,7 @@
 </div>
 <?php } ?>
 
-<?php if (!validateUserRole("conductor")) { ?>
+<?php if (validateUserRole("customer")) { ?>
 	<!-- Form Request  -->
 	<div id="customer-request">
 		<!-- show Messages -->

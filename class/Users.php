@@ -7,6 +7,7 @@ function validateUserRole($rolName) {
 	$booValidate  = false;
 	// get Actual User
 	$current_user = wp_get_current_user();	
+	// print_r($current_user);die;
 	// validate User Roles
 	if ($current_user != null && in_array($rolName, $current_user->roles)) {
 		$booValidate = true;
