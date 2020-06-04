@@ -95,7 +95,13 @@ function ajaxRegisterDriverPosition() {
 	$strLatitude  = $_POST['actLatitude'];
 	$strLongitude = $_POST['actLongitude'];
 	// register Drivers Positions By Route
-	registerDriversPositionsByRoute($idUser, $idRoutes, $strLatitude, $strLongitude);
+	if (registerDriversPositionsByRoute($idUser, $idRoutes, $strLatitude, $strLongitude)) {
+		echo "OK";
+	} else {
+		echo "ERROR";
+	}
+	// die
+	die;
 }
 
 /**

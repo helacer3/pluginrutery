@@ -2,6 +2,7 @@
 	// vars
   var globalMap     = null;
   var markerDrivers = [];
+  var mcrTime       = 10000;
 
   /**
   * general Init
@@ -11,11 +12,11 @@
     if (jsVars.isDriver == true) {
       console.log("El usuario actual, es un conductor");
       // register Position
-      autRegister = setInterval(function () { getLocation(); }, 30000);
+      autRegister = setInterval(function () { getLocation(); }, mcrTime);
     } else {
       console.log("El usuario actual, no es un conductor");
       // load Drivers Position
-      shwDrivers  = setInterval(function () { findDriversPositions(); }, 30000);
+      shwDrivers  = setInterval(function () { findDriversPositions(); }, mcrTime);
     }
     // init Map Directions
     initMapDirections();
