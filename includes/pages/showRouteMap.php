@@ -1,5 +1,5 @@
 <!-- show Google Map -->
-<div id="googleMapRoutes" class="map-container" style="width: 500px; height: 500px;"></div>
+<div id="googleMapRoutes" class="map-container" style="width: 100%; max-width: 100%; height: auto; min-height: 500px;"></div>
 
 <?php if (validateUserRole("conductor")) { ?>
 <!-- show Request List -->

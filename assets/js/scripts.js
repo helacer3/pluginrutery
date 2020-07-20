@@ -1,8 +1,10 @@
 (function($) {
-	// vars
-  var globalMap     = null;
-  var markerDrivers = [];
-  var mcrTime       = 10000;
+  // vars
+  var globalMap       = null;
+  var markerDrivers   = [];
+  var mcrTime         = 10000;
+  var rfsTimeDriver   = 60000;
+  var rfsTimeCustomer = 120000;
 
   /**
   * general Init
@@ -12,11 +14,17 @@
     if (jsVars.isDriver == true) {
       console.log("El usuario actual, es un conductor");
       // register Position
-      autRegister = setInterval(function () { getLocation(); }, mcrTime);
+      autRegister = setInterval(function () { getLocation("driver"); }, mcrTime);
+      // auto Refresh
+      drvRefresh  = setInterval(function () { console.log("realiza Refresh"); location.reload(); }, rfsTimeDriver);
     } else {
       console.log("El usuario actual, no es un conductor");
       // load Drivers Position
       shwDrivers  = setInterval(function () { findDriversPositions(); }, mcrTime);
+      // register User Position
+      autRegister = setInterval(function () { getLocation("user"); }, mcrTime);
+      // auto Refresh
+      // CusRefresh  = setInterval(function () { console.log("realiza Refresh"); location.reload(); }, rfsTimeCustomer);
     }
     // init Map Directions
     initMapDirections();
@@ -37,22 +45,34 @@
   /**
   * add Marker Map
   */
-  function addMarkerMap(cooLatitude, cooLongitude, cooTitle) {
+  function addMarkerMap(cooLatitude, cooLongitude, cooTitle, usrType = "driver") {
     console.log(cooLatitude+" - "+cooLongitude+" - "+cooTitle);
     // coordinates
-    var myLatLng  = { lat: parseFloat(cooLatitude), lng: parseFloat(cooLongitude) };
-
-    var image     = jsVars.plgRuta+'assets/images/markers/busstop.png';
-    // config Marker
-    markerDrivers.push(
+    let myLatLng  = { lat: parseFloat(cooLatitude), lng: parseFloat(cooLongitude) };
+    // validate User Type
+    if (usrType == "driver") {
+      // define Image
+      let image = jsVars.plgRuta+'assets/images/markers/busstop.png';
+      // config Marker
+      markerDrivers.push(
+        // add Map Marker
+        new google.maps.Marker({
+          position:  myLatLng,
+          map:       globalMap,
+          icon:      image,
+          title:     cooTitle
+        })
+      );
+    } else {
+      // define Image
+      let image = jsVars.plgRuta+'assets/images/markers/flagman.png';
+      // add Map Marker
       new google.maps.Marker({
         position:  myLatLng,
         map:       globalMap,
-        icon:      image,
-        //animation: google.maps.Animation.DROP,
-        title:     cooTitle
-      })
-    );
+        icon:      image
+      });
+    }
     // set Map
     //marker.setMap(globalMap);
   }
@@ -72,7 +92,7 @@
 
     var directionsService = new google.maps.DirectionsService();
 
-    var renderOptions = { draggable: true };
+    var renderOptions = { draggable: false };
     var directionDisplay = new google.maps.DirectionsRenderer(renderOptions);
 
     //set the directions display service to the map
@@ -92,6 +112,7 @@
     var originAddress      = jsVars.jsonRoutes.origin.address;
     var destinationAddress = jsVars.jsonRoutes.destination.address;
 
+
     // iterate Intermediate
     Object.entries(items).forEach(([key, item]) => {
       if (item.address !== "") {
@@ -101,7 +122,9 @@
         });
       }
     });
-
+    console.log("waypoints");
+    console.log(waypoints);
+    
     //build directions request
     var request = {
       origin: originAddress,
@@ -111,8 +134,11 @@
       travelMode: google.maps.DirectionsTravelMode.DRIVING
     };
 
-    //get the route from the directions service
+    // get the route from the directions service
     directionsService.route(request, function (response, status) {
+        console.log(response);
+        console.log(status);
+
         if (status == google.maps.DirectionsStatus.OK) {
             directionDisplay.setDirections(response);
 
@@ -218,8 +244,19 @@
   * driver Route Finish
   */
   $(document).on('click', '#routeFinish', function(e) {
-    clearInterval(autRegister);
+    // confirm Finish
+    if (confirm("¿Confirma que terminó su recorrido?")) {
+      clearInterval(autRegister);
+      clearInterval(drvRefresh);
+    }
   });
+
+  /**
+  * register User Position
+  */
+  function registerUserPosition(actCoordinates) {
+    addMarkerMap(actCoordinates.coords.latitude, actCoordinates.coords.longitude, "", "user");
+  }
 
   /**
   * register Driver Position
@@ -285,14 +322,14 @@
   /**
   * get Location
   */
-  function getLocation() {
+  function getLocation(userType) {
     if (navigator.geolocation) {
       console.log("Ingresa a Registrar la ubicación");
-      navigator.geolocation.getCurrentPosition(registerDriverPosition);
+      navigator.geolocation.getCurrentPosition((userType == "driver") ? registerDriverPosition : registerUserPosition);
     } else {
       console.log("Geolocation is not supported by this browser.");
     }
   }
 
- 	$(document).ready(generalInit);
+  $(document).ready(generalInit);
 })(jQuery)

@@ -4,18 +4,19 @@
 	// table Names
 	$tableRoutes        = $wpdb->prefix . 'routes';
 	$tableRoutesStation = $wpdb->prefix . 'routes_station';
+	$idRoute            = (isset($_REQUEST['rId'])) ? $_REQUEST['rId'] : 0;
 	// load Single Route
-	$actRoute           = loadSingleRoute($tableRoutes, $_REQUEST['rId']);
+	$actRoute           = loadSingleRoute($tableRoutes, $idRoute);
 	// actual Route Stations
     $actRouStations     = $wpdb->get_results("SELECT * FROM {$tableRoutesStation} 
-    	where id_routes = ".(int)$_REQUEST['rId']." order by id DESC");
+    	where id_routes = ".(int)$idRoute." order by position ASC");
 	// validate Route Exist
 	if ($actRoute != null) {
 		// create
 		if (isset($_POST['newsubmit'])) { 
 			$newIdRoute  = $_POST['rId'];
 			$newName     = $_POST['newName'];
-			$newPosition = $_POST['newPosition'];
+			$newPosition = ($_POST['newPosition'] < 1) ? 1: $_POST['newPosition'];
 			$newAddress  = $_POST['newAddress'];
 			$newState    = $_POST['newState'];
 			unset($_POST);
@@ -29,7 +30,7 @@
 			$id          = $_POST['uptid'];
 			$uptName     = $_POST['uptName'];
 			$uptAddress  = $_POST['uptAddress'];
-			$uptPosition = $_POST['uptPosition'];
+			$uptPosition = ($_POST['uptPosition'] < 1) ? 1: $_POST['uptPosition'];
 			$uptState    = $_POST['uptState'];
 			$wpdb->query("UPDATE $tableRoutesStation SET name='$uptName', address='$uptAddress', position= ".(int)$uptPosition.", status='$uptState' WHERE id = '$id'");
 			echo "<script>location.replace('admin.php?page=adminRoutesStations&rId=".$_REQUEST['rId']."');</script>";
@@ -48,7 +49,7 @@
 	        <tr>
 	          <th width="20%">Nombre</th>
 	          <th width="20%">Dirección</th>
-	          <th width="20%">Después De</th>
+	          <th width="20%"># Parada</th>
 	          <th width="20%">Estado</th>
 	          <th width="20%">Acciones</th>
 	        </tr>
@@ -63,13 +64,9 @@
 	            <td><textarea id="newAddress" name="newAddress"></textarea></td>	            
 	            <td>
 	            	<select name="newPosition" id="newPosition">
-	            		<option value="0">Es la dirección Origen</option>
-	            		<?php
-	            		foreach ($actRouStations as $station) {
-	            			echo "<option value='{$station->id}'>{$station->name}</option>";
-            			}
-        				?>
-	            	}
+	            		<?php for ($p=1; $p <= 15; $p++) { ?>
+	            			<option value="<?php echo $p; ?>">Parada (<?php echo $p; ?>)</option>
+	            		<?php } ?>
 	            	</select>
 	            </td>
 	            <td>
@@ -98,14 +95,14 @@
 								<td width='10%'><b>ID</b></td>
 								<td width='20%'><b>Nombre</b></td>
 								<td width='25%'><b>Dirección</b></td>
-								<td width='10%'><b>Después de</b></td>
+								<td width='10%'><b># Parada</b></td>
 								<td width='10%'><b>Estado</b></td>
 								<td width='25%'><b>Acciones</b></td>
 							</tr>";
 			// iterate Items
 	        foreach ($actRouStations as $print) {
-	        	// before Route
-	        	$befRoute = loadSingleRoute($tableRoutesStation, $print->position);
+	        	// set Text Parada
+	        	$txtParada = ($print->position > 0) ? "Parada ".$print->position: "";
 	            echo "
 	        	<tr>
 	        		<td width='100%' colspan='4'>
@@ -113,7 +110,7 @@
 							<td>".$print->id."</td>
 							<td>".$print->name."</td>
 							<td>".$print->address."</td>
-							<td>".(($befRoute != null) ? $befRoute->name: 'Estación inicial')."</td>
+							<td>".$txtParada."</td>
 							<td>".(($print->status == 1)?'Activa':'Inactiva')."</td>
 							<td>
 								<a href='admin.php?page=adminRoutesStations&rId=".(int)$_REQUEST['rId']."&upt=".$print->id."#tbl-update'>
@@ -139,7 +136,8 @@
 	    <?php
 	    if (isset($_GET['upt'])) {
 	        $upt_id = $_GET['upt'];
-	        $item   = $wpdb->get_row("SELECT * FROM $tableRoutesStation WHERE id=".(int)$upt_id);
+	        $item   = $wpdb->get_row("SELECT * FROM $tableRoutesStation WHERE id=".(int)$upt_id.
+	        	" order by position ASC");
 	        echo "
 	        <table id='tbl-update' class='wp-list-table widefat striped'>
 	          <thead>
@@ -149,7 +147,7 @@
 	            <tr>
 	              <th width='25%'>Nombre</th>
 	              <th width='30%'>Dirección</th>
-	              <th width='10%'>Después de</th>
+	              <th width='10%'># Parada</th>
 	              <th width='10%'>Estado</th>
 	              <th width='25%'>Acciones</th>
 	            </tr>
@@ -164,14 +162,12 @@
 	                </td>
 	                <td><input type='text' id='uptAddress' name='uptAddress' value='$item->address'></td>                
 	                <td>
-						<select name='uptPosition' id='uptPosition'>
-	            		<option value='0'>Es la dirección Origen</option>";
-	            		foreach ($actRouStations as $station) {
-	            			// dont show Actual Station
-	            			if ($station->id != $item->id) {
-	            				echo "<option value='{$station->id}' ".(($station->id == $item->position) ? 'selected': '').">{$station->name}</option>";
-            				}
-            			}
+						<select name='uptPosition' id='uptPosition'>";
+						for ($p=1; $p <= 15; $p++) {
+	            			echo "<option value='".$p."' ".(($item->position == $p) ? "selected" : "").
+	            			">Parada (".$p.")</option>";
+	            		
+	            		}
 		            	echo "</select>
 	                </td>
 	                <td>

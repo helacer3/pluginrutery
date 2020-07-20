@@ -114,7 +114,8 @@ function loadPositionsByRoute($idRoutes) {
 		LEFT JOIN $tableUsers u
 		ON rdp.id_user = u.id
 		WHERE DATE(routes_date) = DATE(NOW())
-		AND id_routes = ".(int)$idRoutes;
+		AND id_routes = ".(int)$idRoutes.
+		" ORDER BY routes_date DESC LIMIT 1";
 	// get Results
 	$objRequest = $wpdb->get_results($sqlQuery);
 	// default Return
@@ -144,6 +145,8 @@ function loadDriversPositionsByRoute($idUser, $idRoutes, $vldDate = false) {
 	if ($vldDate) {
 		$sqlQuery .= " AND DATE(routes_date) = AND DATE(NOW())";
 	}
+	// order and limit query
+	$sqlQuery  .= " ORDER BY routes_date DESC LIMIT 1";
 	// get Results
 	$objRequest = $wpdb->get_results($sqlQuery);
 	// default Return
@@ -157,20 +160,9 @@ function registerDriversPositionsByRoute($idUser, $idRoutes, $strLatitude, $strL
   	global $wpdb;
 	// table Routes Station
 	$tableRoutesDriver = $wpdb->prefix . 'routes_driver_position';
-	$drvPosition       = loadDriversPositionsByRoute($idUser, $idRoutes);
-	// validate Exist
-	if ($drvPosition == null || count($drvPosition) == 0) {
-	  	$strQuery = "INSERT INTO $tableRoutesDriver 
-	  		(id_routes, id_user, latitude, longitude, routes_date, status) 
-	  		VALUES(".(int)$idRoutes.", ".(int)$idUser.", '".$strLatitude."', '".$strLongitude."', NOW(), 1)";
-  	} else {
-	  	$strQuery = "UPDATE $tableRoutesDriver 
-	  		SET latitude  = '".$strLatitude."',
-	  		longitude = '".$strLongitude."',
-	  		routes_date = NOW()
-			WHERE id_user = ".(int)$idUser." 
-			AND id_routes = ".(int)$idRoutes;
-  	}
+	$strQuery = "INSERT INTO $tableRoutesDriver 
+	(id_routes, id_user, latitude, longitude, routes_date, status) 
+	VALUES(".(int)$idRoutes.", ".(int)$idUser.", '".$strLatitude."', '".$strLongitude."', NOW(), 1)";
   	// echo $strQuery;die;
   	// run Query
   	$wpdb->query($strQuery);
