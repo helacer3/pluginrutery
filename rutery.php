@@ -42,12 +42,18 @@ function ajaxRequestService() {
 	// set Table Name
 	$tableRoutesRequest = $wpdb->prefix . 'routes_request';
 	// request Post
-	$solName  = $_POST['solName'];
-	$solPhone = $_POST['solPhone'];
-	$solRoute = $_POST['solRoute'];
+	$solName               = $_POST['solName'];
+	$solPhone              = $_POST['solPhone'];
+	$solLatitude           = $_POST['solLatitude'];
+	$solLongitude          = $_POST['solLongitude'];
+	$solRoute              = $_POST['solRoute'];
+	$solAddressOrigin      = $_POST['solAddressOrigin'];
+	$solAddressDestination = $_POST['solAddressDestination'];
 	// create Request
-	$wpdb->query("INSERT INTO $tableRoutesRequest (id_routes, name, phone, request_date, contacted, status) 
-		VALUES (".(int)$solRoute.", '$solName', '$solPhone', NOW(), 0, 1)");
+	$wpdb->query("INSERT INTO $tableRoutesRequest (id_routes, name, phone, latitud, longitud, 
+		originAddress, destinationAddress, request_date, contacted, status) 
+		VALUES (".(int)$solRoute.", '$solName', '$solPhone', '$solLatitude', '$solLongitude', 
+		'$solAddressOrigin', '$solAddressDestination', NOW(), 0, 1)");
 	// print Response
 	echo "OK";
 	// die
@@ -70,7 +76,6 @@ function ajaxRequestContacted () {
 	wp_die(); 
 } 
 
-
 /**
 * ajax Request List
 */
@@ -86,20 +91,47 @@ function ajaxRequestList() {
 }
 
 /**
+* ajax Customer List
+*/
+function ajaxCustomerList() {
+	// post Vars
+	$id             = $_POST['actRoute'];
+	// load Request List
+	$lstRequest     = loadRequestListByRoute($id);
+	// default Return
+	echo json_encode(
+		array (
+	  		'status' => 'OK',
+	  		'data'   => $lstRequest
+	  	)
+	);
+	// die
+	die;
+}
+
+
+/**
 * ajax Register Driver Position 
 */
 function ajaxRegisterDriverPosition() {
+	// default Var
+	$strResponse  = "OK";
 	// post Vars
 	$idUser       = $_POST['actUser'];
 	$idRoutes     = $_POST['actRoute'];
-	$strLatitude  = $_POST['actLatitude'];
-	$strLongitude = $_POST['actLongitude'];
-	// register Drivers Positions By Route
-	if (registerDriversPositionsByRoute($idUser, $idRoutes, $strLatitude, $strLongitude)) {
-		echo "OK";
-	} else {
-		echo "ERROR";
+	$strLatitude  = round($_POST['actLatitude'], 6);
+	$strLongitude = round($_POST['actLongitude'], 6);
+	// validate Drivers Positions
+	$qtyItems     = validateDriversPositionsByCoordinates($idUser, $idRoutes, $strLatitude, $strLongitude);
+	// validate Exist Position Items
+	if ($qtyItems == 0) { 
+		// register Drivers Positions By Route
+		if (!registerDriversPositionsByRoute($idUser, $idRoutes, $strLatitude, $strLongitude)) {
+			$strResponse = "ERROR";
+		}
 	}
+	// echo String Response
+	echo $strResponse;
 	// die
 	die;
 }
@@ -120,6 +152,7 @@ function ajaxFindDriversPositions() {
 add_action( 'wp_ajax_ajaxRequestService', 'ajaxRequestService' );
 add_action( 'wp_ajax_ajaxRequestContacted', 'ajaxRequestContacted' );
 add_action( 'wp_ajax_ajaxRequestList', 'ajaxRequestList' );
+add_action( 'wp_ajax_ajaxCustomerList', 'ajaxCustomerList' );
 add_action( 'wp_ajax_ajaxRegisterDriverPosition', 'ajaxRegisterDriverPosition' );
 add_action( 'wp_ajax_ajaxFindDriversPositions', 'ajaxFindDriversPositions' );
 
@@ -127,6 +160,7 @@ add_action( 'wp_ajax_ajaxFindDriversPositions', 'ajaxFindDriversPositions' );
 add_action( 'wp_ajax_nopriv_ajaxRequestService', 'ajaxRequestService' );
 add_action( 'wp_ajax_nopriv_ajaxRequestContacted', 'ajaxRequestContacted' );
 add_action( 'wp_ajax_nopriv_ajaxRequestList', 'ajaxRequestList' );
+add_action( 'wp_ajax_nopriv_ajaxCustomerList', 'ajaxCustomerList' );
 add_action( 'wp_ajax_nopriv_ajaxRegisterDriverPosition', 'ajaxRegisterDriverPosition' );
 add_action( 'wp_ajax_nopriv_ajaxFindDriversPositions', 'ajaxFindDriversPositions' );
 

@@ -25,6 +25,12 @@
 	display: none;
 
 }
+.msg_address {
+	margin-top: 11px;
+	margin-bottom: 11px;
+	color: #0123aa;
+	font-weight: bold;
+}
 
 .msg_error {
 	background-color: #cd2653;

@@ -18,6 +18,10 @@
 		<!-- show Messages -->
 		<div id="solErroMessage" class="msg_error">&nbsp;</div>
 		<div id="solSuccessMessage" class="msg_success">&nbsp;</div>
+		<div class="msg_address">
+			Para definir la dirección origen, favor seleccione sobre la ruta, el punto exacto 
+			donde desea que pasemos por usted!
+		</div>
 		<!-- show Form -->
 		<div id="customer-request-input">
 			<label>Nombre:</label>
@@ -26,6 +30,14 @@
 		<div id="customer-request-input">
 			<label>Número De Celular:</label>
 			<input type="number" name="solPhone" id="solPhone" placeholder="Número de Celular" required="required">
+		</div>
+		<div id="customer-request-input">
+			<label>Dirección origen: </label>
+			<input type="text" name="solAddressOrigin" id="solAddressOrigin" placeholder="Dirección Origen" required="required">
+		</div>
+		<div id="customer-request-input">
+			<label>Dirección destino: </label>
+			<input type="text" name="solAddressDestination" id="solAddressDestination" placeholder="Dirección Destino" required="required">
 		</div>
 		<div id="customer-request-input" class="inputRequest">
 			<button id="solSubmit" type="submit" name="solSubmit">Solicitar Servicio</button>
@@ -36,4 +48,3 @@
 
 <!-- show Map Routes -->
 <div id="googleMapRoutesAddressess"></div>
-
